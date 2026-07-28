@@ -1,0 +1,16 @@
+{
+  "name": "proxy-sub-distributor",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "node src/index.js",
+    "test": "node --test"
+  },
+  "dependencies": {
+    "yaml": "^2.8.0"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

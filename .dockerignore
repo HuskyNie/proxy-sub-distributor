@@ -1,0 +1,17 @@
+node_modules
+.idea
+npm-debug.log
+data/config.json
+data/clash-strategies.json
+data/latest.yaml
+data/metadata.json
+data/history
+data/rejected
+data/events.jsonl
+test
+.git
+.DS_Store
+._*
+**/._*
+@eaDir
+backup-*

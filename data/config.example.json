@@ -1,0 +1,34 @@
+{
+  "server": {
+    "host": "0.0.0.0",
+    "port": 7899,
+    "syncToken": "replace-with-a-long-random-admin-token"
+  },
+  "upstream": {
+    "url": "https://provider.example/subscription.yaml",
+    "headers": {
+      "User-Agent": "clash.meta"
+    }
+  },
+  "sync": {
+    "intervalMinutes": 360,
+    "runOnStart": true
+  },
+  "health": {
+    "intervalMinutes": 30,
+    "tcpTimeoutMs": 2500,
+    "concurrency": 10,
+    "minBothPassedRatio": 0.5
+  },
+  "devices": {
+    "router": {
+      "token": "replace-with-a-long-random-router-token"
+    },
+    "laptop": {
+      "token": "replace-with-a-long-random-laptop-token"
+    },
+    "phone": {
+      "token": "replace-with-a-long-random-phone-token"
+    }
+  }
+}

@@ -1,0 +1,31 @@
+{
+  "fallbackGroups": [
+    {
+      "name": "Region A Fallback",
+      "targetGroup": "PROXY",
+      "includePattern": "^Region A ",
+      "excludePattern": "Deprecated|Unavailable",
+      "url": "https://www.gstatic.com/generate_204",
+      "interval": 60
+    }
+  ],
+  "chainGroups": [
+    {
+      "name": "Chained Exit Fallback",
+      "targetGroup": "PROXY",
+      "secondHopPattern": "^Exit Node ",
+      "firstHops": [
+        {
+          "name": "Chain Primary",
+          "includePattern": "^Entry Primary "
+        },
+        {
+          "name": "Chain Backup",
+          "includePattern": "^Entry Backup "
+        }
+      ],
+      "url": "https://www.gstatic.com/generate_204",
+      "interval": 60
+    }
+  ]
+}
