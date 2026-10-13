@@ -97,11 +97,12 @@ function applyFallbackGroup(parsed, rawDefinition) {
   target.proxies = [name, ...target.proxies.filter((proxyName) => proxyName !== name)];
 }
 
-function exactlyOneMatchingProxy(parsed, patternValue, field) {
+function optionalMatchingProxy(parsed, patternValue, field) {
   const pattern = optionalPattern(requiredText(patternValue, field), field);
   const matches = (Array.isArray(parsed.proxies) ? parsed.proxies : []).filter((proxy) =>
     pattern.test(String(proxy?.name ?? ''))
   );
+  if (matches.length === 0) return null;
   if (matches.length !== 1) {
     throw new Error(`${field} must match exactly one proxy, found ${matches.length}`);
   }
@@ -126,7 +127,7 @@ function applyChainGroup(parsed, rawDefinition) {
     throw new Error(`chain group ${name} target group ${targetGroupName} has no proxies`);
   }
 
-  const secondHop = exactlyOneMatchingProxy(
+  const secondHop = optionalMatchingProxy(
     parsed,
     rawDefinition?.secondHopPattern,
     `chain group ${name} secondHopPattern`
@@ -136,17 +137,20 @@ function applyChainGroup(parsed, rawDefinition) {
     throw new Error(`chain group ${name} firstHops must be a non-empty array`);
   }
 
+  if (!secondHop) return;
+
   const generatedNames = [];
   for (const firstHopDefinition of firstHops) {
     const generatedName = requiredText(
       firstHopDefinition?.name,
       `chain group ${name} first hop name`
     );
-    const firstHop = exactlyOneMatchingProxy(
+    const firstHop = optionalMatchingProxy(
       parsed,
       firstHopDefinition?.includePattern,
       `chain group ${name} first hop ${generatedName} includePattern`
     );
+    if (!firstHop) continue;
     const generatedProxy = {
       ...secondHop,
       name: generatedName,
@@ -157,6 +161,8 @@ function applyChainGroup(parsed, rawDefinition) {
     else proxies[existingProxyIndex] = generatedProxy;
     generatedNames.push(generatedName);
   }
+
+  if (generatedNames.length === 0) return;
 
   const chainGroup = {
     name,
