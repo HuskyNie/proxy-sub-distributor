@@ -1,0 +1,16 @@
+services:
+  fib-sub-sync:
+    build:
+      context: .
+      dockerfile: Dockerfile.nas
+    image: fib-sub-sync:issue-20261111
+    container_name: fib-sub-sync
+    restart: unless-stopped
+    ports:
+      - "7899:7899"
+    environment:
+      CONFIG_PATH: /app/data/config.json
+      DATA_DIR: /app/data
+      STRATEGY_CONFIG_PATH: /app/data/clash-strategies.json
+    volumes:
+      - ./data:/app/data

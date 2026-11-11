@@ -1,0 +1,79 @@
+{
+  "fallbackGroups": [
+    {
+      "name": "🇸🇬新加坡故障转移",
+      "targetGroup": "🔰国外流量",
+      "includePattern": "^新加坡 (?!XZ\\b)",
+      "url": "https://www.gstatic.com/generate_204",
+      "interval": 60
+    },
+    {
+      "name": "🇸🇬新加坡解锁故障转移",
+      "targetGroup": "🔰国外流量",
+      "includePattern": "^新加坡 (?:HX[23]?|IX|XX) ",
+      "url": "https://www.gstatic.com/generate_204",
+      "interval": 60
+    },
+    {
+      "name": "🇯🇵日本故障转移",
+      "targetGroup": "🔰国外流量",
+      "includePattern": "^日本 (?!TK\\b)",
+      "url": "https://www.gstatic.com/generate_204",
+      "interval": 60
+    },
+    {
+      "name": "🇯🇵日本解锁故障转移",
+      "targetGroup": "🔰国外流量",
+      "includePattern": "^日本 (?:IX2?|IXX|XE[23]?|XX2?) ",
+      "url": "https://www.gstatic.com/generate_204",
+      "interval": 60
+    },
+    {
+      "name": "🇺🇸美国故障转移",
+      "targetGroup": "🔰国外流量",
+      "includePattern": "^美国 (?!SUB\\b)",
+      "url": "https://www.gstatic.com/generate_204",
+      "interval": 60
+    },
+    {
+      "name": "🇺🇸美国解锁故障转移",
+      "targetGroup": "🔰国外流量",
+      "includePattern": "^美国 IX ",
+      "url": "https://www.gstatic.com/generate_204",
+      "interval": 60
+    },
+    {
+      "name": "🇭🇰港澳台故障转移",
+      "targetGroup": "🔰国外流量",
+      "includePattern": "^(?:香港|澳门|台湾) (?!XZ\\b)",
+      "url": "https://www.gstatic.com/generate_204",
+      "interval": 60
+    },
+    {
+      "name": "🇭🇰港澳台解锁故障转移",
+      "targetGroup": "🔰国外流量",
+      "includePattern": "^(?:香港|澳门|台湾) (?!XZ\\b)(?!.*(?:无解锁保证|不保证解锁|部分解锁|AI禁止))(?=.*解锁)",
+      "url": "https://www.gstatic.com/generate_204",
+      "interval": 60
+    }
+  ],
+  "chainGroups": [
+    {
+      "name": "🇯🇵日本链式代理",
+      "targetGroup": "🔰国外流量",
+      "secondHopPattern": "^日本 TK ",
+      "firstHops": [
+        {
+          "name": "🇯🇵链式·XX2→TK",
+          "includePattern": "^日本 XX2 "
+        },
+        {
+          "name": "🇯🇵链式·WX→TK",
+          "includePattern": "^日本 WX "
+        }
+      ],
+      "url": "https://www.gstatic.com/generate_204",
+      "interval": 60
+    }
+  ]
+}
