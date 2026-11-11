@@ -1,3 +1,4 @@
+import { normalizeSubscriptionInfo } from './subscription-info.js';
 import { resolveSubscription } from './sublink.js';
 import { IssueState } from './issue-state.js';
 import { checkinUrl, loginUrl, normalizeFibConfig } from './fib.js';
@@ -148,7 +149,8 @@ async function fetchSubscription(fetchImpl, subscriptionUrl) {
     }),
     'FIB subscription download'
   );
-  return response.text();
+  return { yamlText: await response.text(),
+    subscriptionUserinfo: normalizeSubscriptionInfo(response.headers.get('subscription-userinfo')) };
 }
 
 function syncSuccessDetails(mode, metadata) {
@@ -224,12 +226,13 @@ export async function runSync({
     const userPage = await fetchUserPage(fetchImpl, normalizedFib, cookie);
     const links = await resolveSubscription({ html: userPage, fib: normalizedFib, cookie, fetchImpl,
       issueState: new IssueState(cache.dataDir), eventLog, now });
-    const yamlText = await fetchSubscription(fetchImpl, links.clash);
+    const { yamlText, subscriptionUserinfo } = await fetchSubscription(fetchImpl, links.clash);
     const subscriptionUrl = new URL(links.clash);
     const details = {
       sourceUrl: links.clash,
       subscriptionUrlHost: subscriptionUrl.host,
-      fetchedAt
+      fetchedAt,
+      subscriptionUserinfo
     };
     const health = await assertHealthySubscription({
       yamlText,
@@ -270,12 +273,13 @@ export async function syncFromSubscriptionUrl({
   await recordEvent(eventLog, 'fib_sync_started', { mode: 'manual_url' });
 
   try {
-    const yamlText = await fetchSubscription(fetchImpl, normalizedUrl);
+    const { yamlText, subscriptionUserinfo } = await fetchSubscription(fetchImpl, normalizedUrl);
     const parsedUrl = new URL(normalizedUrl);
     const details = {
       sourceUrl: normalizedUrl,
       subscriptionUrlHost: parsedUrl.host,
-      fetchedAt
+      fetchedAt,
+      subscriptionUserinfo
     };
     const health = await assertHealthySubscription({
       yamlText,

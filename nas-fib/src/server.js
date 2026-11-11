@@ -1,3 +1,4 @@
+import { normalizeSubscriptionInfo, contentDigest } from './subscription-info.js';
 import http from 'node:http';
 
 import { transformClashYaml } from './clash.js';
@@ -11,8 +12,9 @@ function sendJson(response, status, body) {
   response.end(`${JSON.stringify(body, null, 2)}\n`);
 }
 
-function sendText(response, status, text, contentType = 'text/plain; charset=utf-8') {
+function sendText(response, status, text, contentType = 'text/plain; charset=utf-8', headers = {}) {
   response.writeHead(status, {
+    ...headers,
     'content-type': contentType,
     'cache-control': 'no-store'
   });
@@ -131,7 +133,7 @@ export function createServer({
       }
 
       const subMatch = url.pathname.match(/^\/sub\/([A-Za-z0-9_-]+)$/);
-      if (request.method === 'GET' && subMatch) {
+      if (['GET', 'HEAD'].includes(request.method) && subMatch) {
         const deviceName = subMatch[1];
         const device = devices[deviceName];
         if (!device) {
@@ -164,7 +166,11 @@ export function createServer({
             device: deviceName,
             status: 200
           });
-          sendText(response, 200, rendered, 'text/yaml; charset=utf-8');
+          const metadata = await cache.readMetadata();
+          const userinfo = metadata.contentDigest === contentDigest(latest)
+            ? normalizeSubscriptionInfo(metadata.subscriptionUserinfo) : null;
+          sendText(response, 200, request.method === 'HEAD' ? '' : rendered, 'text/yaml; charset=utf-8',
+            userinfo ? { 'subscription-userinfo': userinfo } : {});
         } catch (error) {
           await recordSubscriptionEvent(eventLog, 'subscription_failed', request, {
             device: deviceName,

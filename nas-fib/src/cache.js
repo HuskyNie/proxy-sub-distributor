@@ -1,3 +1,4 @@
+import { normalizeSubscriptionInfo, contentDigest } from './subscription-info.js';
 import { copyFile, mkdir, readFile, readdir, rename, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
@@ -68,8 +69,13 @@ export class SubscriptionCache {
       sourceUrl: details.sourceUrl,
       subscriptionUrlHost: details.subscriptionUrlHost,
       version,
-      health: details.health ?? null
+      health: details.health ?? null,
+      subscriptionUserinfo: normalizeSubscriptionInfo(details.subscriptionUserinfo),
+      contentDigest: contentDigest(yamlText)
     };
+    await writeFile(join(this.historyDir, `${version}.info.json`), JSON.stringify({
+      subscriptionUserinfo: metadata.subscriptionUserinfo, contentDigest: metadata.contentDigest
+    }));
     await writeFile(this.metadataPath, `${JSON.stringify(metadata, null, 2)}\n`);
     return metadata;
   }
@@ -111,8 +117,14 @@ export class SubscriptionCache {
     await rename(latestTemp, this.latestPath);
 
     const existing = await this.readMetadata();
+    let savedInfo = {};
+    try { savedInfo = JSON.parse(await readFile(join(this.historyDir, `${version}.info.json`), 'utf8')); }
+    catch { /* Older histories have no subscription metadata. Do not reuse a different version's values. */ }
+    const digest = contentDigest(yamlText);
     const metadata = {
       ...existing,
+      subscriptionUserinfo: savedInfo.contentDigest === digest ? normalizeSubscriptionInfo(savedInfo.subscriptionUserinfo) : null,
+      contentDigest: digest,
       lastError: null,
       proxyCount: validation.proxyCount,
       groupCount: validation.groupCount,
