@@ -43,3 +43,13 @@ NAS 升级使用 `Dockerfile.nas`，复用旧镜像中的 Node/YAML 依赖；用
 回退时使用本次备份的 compose 与旧镜像重建服务；必要时从备份恢复源码与缓存。
 不要倒退 `issue-state.json` 中的领取记录，否则可能重复申请。
 账号配置、设备令牌、订阅 YAML、事件日志与完整订阅 URL 不进入 Git。
+
+## 地区自动选择（2026-11-12）
+
+运行策略仍由 NAS `data/clash-strategies.json` 管理，设备请求时加载。
+历史字段 `fallbackGroups` 下每组可设置 `type: "url-test"` 和 `tolerance: 300`；
+省略 type 保持 fallback，url-test 省略 tolerance 默认 300 ms，允许 0–65535 整数。
+当前八个地区组使用 url-test / 300 ms；保留组名、节点过滤、60 秒检测及 lazy=false，
+日本链式组仍为 fallback。组名中的“故障转移”为兼容已保存选择而保留。
+容差减少小幅延迟差引发的切换，不保证连续多轮确认或修复实际丢包。
+修改源应是分发项目及运行策略，不应只改路由器下载的 YAML。

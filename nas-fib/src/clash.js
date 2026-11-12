@@ -75,9 +75,18 @@ function applyFallbackGroup(parsed, rawDefinition) {
     throw new Error(`fallback group ${name} found no matching proxies`);
   }
 
+  const type = rawDefinition?.type ?? 'fallback';
+  if (!['fallback', 'url-test'].includes(type)) {
+    throw new Error(`regional group ${name} type must be fallback or url-test`);
+  }
+  const tolerance = rawDefinition?.tolerance ?? 300;
+  if (type === 'url-test' && (!Number.isInteger(tolerance) || tolerance < 0 || tolerance > 65535)) {
+    throw new Error(`regional group ${name} tolerance must be an integer from 0 to 65535`);
+  }
   const fallback = {
     name,
-    type: 'fallback',
+    type,
+    ...(type === 'url-test' ? { tolerance } : {}),
     proxies: proxyNames,
     url: String(rawDefinition?.url ?? DEFAULT_FALLBACK_URL),
     interval: positiveInteger(

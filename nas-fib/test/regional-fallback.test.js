@@ -65,7 +65,25 @@ test('global regional fallback groups include usable nodes and conservatively fi
   for (const [name, members] of Object.entries(expectedMembers)) {
     const matches = groups.filter((group) => group.name === name);
     assert.equal(matches.length, 1, `${name} should appear exactly once`);
+    assert.equal(matches[0].type, 'url-test');
+    assert.equal(matches[0].tolerance, 300);
     assert.deepEqual(matches[0].proxies, members, `${name} members`);
     assert.ok(target.proxies.includes(name), `${name} should be selectable from 国外流量`);
   }
+});
+
+test('regional url-test validates tolerance and preserves legacy fallback defaults', () => {
+  const source = YAML.stringify({ proxies: [{ name: 'SG', type: 'ss', server: 'localhost', port: 1 }], 'proxy-groups': [{ name: 'main', type: 'select', proxies: ['SG'] }] });
+  const definition = { name: 'region', targetGroup: 'main' };
+  const render = (options) => YAML.parse(transformClashYaml(source, { fallbackGroups: [{ ...definition, ...options }] }))['proxy-groups'][0];
+  assert.equal(render({}).type, 'fallback');
+  assert.equal(render({}).tolerance, undefined);
+  assert.equal(render({ type: 'url-test' }).tolerance, 300);
+  assert.equal(render({ type: 'url-test', tolerance: 0 }).tolerance, 0);
+  for (const tolerance of [-1, 1.5, 65536, '300']) {
+    assert.throws(() => render({ type: 'url-test', tolerance }), /tolerance/);
+  }
+  assert.throws(() => render({ type: 'invalid' }), /type/);
+  const once = transformClashYaml(source, { fallbackGroups: [{ ...definition, type: 'url-test', tolerance: 300 }] });
+  assert.equal(transformClashYaml(once, { fallbackGroups: [{ ...definition, type: 'url-test', tolerance: 300 }] }), once);
 });

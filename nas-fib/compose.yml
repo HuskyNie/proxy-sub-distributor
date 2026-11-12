@@ -3,7 +3,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.nas
-    image: fib-sub-sync:info-20261111
+    image: fib-sub-sync:urltest-20261112
     container_name: fib-sub-sync
     restart: unless-stopped
     ports:
