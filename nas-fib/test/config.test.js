@@ -32,10 +32,35 @@ test('loads config and applies secret environment overrides', async () => {
     assert.equal(config.fib.email, 'env@example.com');
     assert.equal(config.fib.password, 'env-password');
     assert.deepEqual(config.clash, {});
+    assert.deepEqual(config.upstreams, []);
     assert.equal(config.devices.mt5000.token, 'router-token');
   } finally {
     await rm(dir, { recursive: true, force: true });
   }
+});
+
+test('loads optional socket and URL upstreams without changing the FIB login', async (context) => {
+  const dir = await mkdtemp(join(tmpdir(), 'fib-upstreams-config-'));
+  context.after(() => rm(dir, { recursive: true, force: true }));
+  const configPath = join(dir, 'config.json');
+  const kitty = { id: 'kitty', name: 'Kitty', targetGroup: 'PROXY', socketPath: '/run/kitty/subscription.sock',
+    excludePattern: '^(?:🇦🇱\\s*)?剩余流量[：:]' };
+  const other = { id: 'other', name: 'Other', targetGroup: 'PROXY', url: 'https://example.invalid/sub',
+    headers: { 'User-Agent': 'mihomo' }, intervalMinutes: 30 };
+  const settings = { server: { syncToken: 'test' }, fib: { email: 'test@example.invalid', password: 'test' },
+    sync: { intervalMinutes: 120 }, upstreams: [kitty, other] };
+  await writeFile(configPath, JSON.stringify(settings));
+  const config = await loadConfig(configPath, {});
+
+  assert.equal(config.fib.email, 'test@example.invalid');
+  assert.equal(config.upstreams[0].intervalMinutes, 120);
+  assert.equal(config.upstreams[0].socketPath, kitty.socketPath);
+  assert.equal(config.upstreams[0].exclude.test('🇦🇱 剩余流量：100 GB'), true);
+  assert.equal(config.upstreams[1].headers.get('user-agent'), 'mihomo');
+
+  settings.upstreams.push({ ...kitty, socketPath: '/run/test.sock' });
+  await writeFile(configPath, JSON.stringify(settings));
+  await assert.rejects(loadConfig(configPath, {}), /Upstream id must be unique/);
 });
 
 test('rejects configs without device tokens', async () => {

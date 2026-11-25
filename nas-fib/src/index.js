@@ -11,6 +11,7 @@ import { createServer } from './server.js';
 import { createStrategyConfigLoader } from './strategy-config.js';
 import { runSync, syncFromSubscriptionUrl } from './sync.js';
 import { transformClashYaml } from './clash.js';
+import { createAdditionalUpstreams } from './upstreams.js';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const defaultConfigPath = join(here, '..', 'data', 'config.json');
@@ -36,6 +37,12 @@ async function checkHealth(yamlText) {
   return checkSubscriptionHealth(yamlText, config.health);
 }
 
+const upstreams = createAdditionalUpstreams({
+  sources: config.upstreams,
+  dataDir,
+  eventLog,
+  healthChecker: checkHealth
+});
 const gate = createTaskGate();
 
 async function syncNow() {
@@ -72,6 +79,8 @@ const server = createServer({
   devices: config.devices,
   clash: config.clash,
   loadClashOptions: strategyConfig.load,
+  renderUpstreams: upstreams.render,
+  upstreamStatus: upstreams.jobs.length ? upstreams.status : undefined,
   syncToken: config.server.syncToken,
   syncNow,
   syncUrl,
@@ -86,6 +95,14 @@ if (config.sync.runOnStart) {
   syncNow().catch((error) => {
     console.error(`initial sync failed: ${error.message}`);
   });
+}
+
+for (const upstream of upstreams.jobs) {
+  const syncUpstream = () => upstream.refresh().catch((error) => {
+    console.error(`upstream ${upstream.id} sync failed: ${error.message}`);
+  });
+  if (config.sync.runOnStart) syncUpstream();
+  if (upstream.intervalMinutes > 0) setInterval(syncUpstream, upstream.intervalMinutes * 60_000);
 }
 
 const intervalMs = config.sync.intervalMinutes * 60 * 1000;

@@ -1,7 +1,7 @@
 import YAML from 'yaml';
 
-const DEFAULT_FALLBACK_URL = 'https://www.gstatic.com/generate_204';
-const DEFAULT_FALLBACK_INTERVAL = 60;
+export const DEFAULT_FALLBACK_URL = 'https://www.gstatic.com/generate_204';
+export const DEFAULT_FALLBACK_INTERVAL = 60;
 
 function positiveInteger(value, fallback, field) {
   if (value === undefined || value === null || value === '') return fallback;
