@@ -3,4 +3,5 @@ FROM ${KITTY_BROWSER_IMAGE}
 
 COPY provider.py /opt/kitty-browser/provider.py
 COPY kitty-provider /custom-services.d/kitty-provider
-RUN chmod 0755 /custom-services.d/kitty-provider
+RUN chmod 0755 /opt/kitty-browser /custom-services.d/kitty-provider \
+    && chmod 0644 /opt/kitty-browser/provider.py
