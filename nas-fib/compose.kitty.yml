@@ -4,6 +4,7 @@ services:
       - "${KITTY_RUNTIME_DIR:?Set KITTY_RUNTIME_DIR}:/run/kitty:ro"
 
   kitty-browser:
+    hostname: kitty-browser
     build:
       context: ./kitty-browser
       args:
