@@ -53,34 +53,3 @@ NAS 升级使用 `Dockerfile.nas`，复用旧镜像中的 Node/YAML 依赖；用
 日本链式组仍为 fallback。组名中的“故障转移”为兼容已保存选择而保留。
 容差减少小幅延迟差引发的切换，不保证连续多轮确认或修复实际丢包。
 修改源应是分发项目及运行策略，不应只改路由器下载的 YAML。
-
-## 多上游与 Kitty
-
-在 NAS 私有目录中的 `data/config.json` 增加 `upstreams` 即可启用第二个来源。FIB 继续提供基础 YAML、规则和既有策略。每个追加上游有单独的同步周期和缓存，成功的节点在设备下载时附加到指定的 `select` 组。示例使用当前 FIB 的 `🔰国外流量`。
-
-```json
-{
-  "upstreams": [
-    {
-      "id": "kitty",
-      "name": "Kitty",
-      "socketPath": "/run/kitty/subscription.sock",
-      "targetGroup": "🔰国外流量",
-      "intervalMinutes": 360,
-      "excludePattern": "^(?:🇦🇱\\s*)?(?:剩余流量|距离下次重置剩余|套餐到期|官网)[：:]"
-    }
-  ]
-}
-```
-
-- Kitty 节点按订阅名称的地域旗标分组，每组使用 `url-test`、300 ms 容差、60 秒间隔和 `lazy: false`。四种账户提示可以通过示例的 `excludePattern` 过滤。缺少地域旗标的真实节点归入「其他」。
-- 普通 YAML 来源可填写 `url` 和可选的 `headers`。每个源应指定自己的 `id` 和显示名称。附加节点统一加上来源前缀。
-- 非法响应、会话失效或健康检查不通过时，继续分发该源上次成功的节点。`GET /status` 提供每个源的最近成功时间、节点数和错误。设备的 `Subscription-Userinfo` 仍显示 FIB 账户信息。
-
-Kitty 浏览器每轮刷新仪表盘并用当前登录态下载最新的订阅。可以用 `compose.kitty.yml` 部署可选的浏览器服务。
-
-1. 将 `KITTY_PROFILE_DIR` 指向 NAS 专用 Chromium 的持久化目录。目录保留 `kitty-profile`，使用浏览器在 Kitty 官方页面登录一次并勾选「记住我」。同一个 profile 仅供一个 Chromium 实例使用。
-2. 将 `KITTY_RUNTIME_DIR` 指向另一个 NAS 私有目录并设为 `0700`。目录由 `KITTY_PUID` / `KITTY_PGID` 指定的浏览器用户持有。浏览器的 YAML 服务使用 `0600` 的 Unix 套接字，分发服务只读挂载该目录。
-3. 使用 `docker compose -f compose.yml -f compose.kitty.yml config` 核对配置。发布构建时使用同一组 Compose 文件，并按上面的 NAS 发布流程启动。会话到期时，在该 NAS 浏览器中重新登录，下轮同步即可恢复。
-
-浏览器服务不发布端口。`KITTY_SUBSCRIPTION_HOSTS` 指定允许的订阅主机，如果 Kitty 官方更换域名，可核对后更新。运行目录里的浏览器会话数据、订阅内容和缓存均保存在 NAS。

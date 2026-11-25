@@ -3,4 +3,3 @@ ARG BASE_IMAGE=fib-sub-sync:chain-fix-20260927
 FROM ${BASE_IMAGE}
 WORKDIR /app
 COPY src ./src
-RUN chmod -R a+rX /app/src

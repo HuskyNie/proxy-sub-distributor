@@ -83,8 +83,6 @@ export function createServer({
   devices,
   clash,
   loadClashOptions,
-  renderUpstreams,
-  upstreamStatus,
   syncToken,
   syncNow,
   syncUrl,
@@ -102,8 +100,7 @@ export function createServer({
       if (request.method === 'GET' && url.pathname === '/status') {
         sendJson(response, 200, {
           cache: await cache.readMetadata(),
-          devices: Object.keys(devices),
-          upstreams: upstreamStatus ? await upstreamStatus() : undefined
+          devices: Object.keys(devices)
         });
         return;
       }
@@ -165,7 +162,6 @@ export function createServer({
             latest,
             mergeClashOptions(globalClash, device.clash)
           );
-          const subscription = renderUpstreams ? await renderUpstreams(rendered) : rendered;
           await recordSubscriptionEvent(eventLog, 'subscription_served', request, {
             device: deviceName,
             status: 200
@@ -173,7 +169,7 @@ export function createServer({
           const metadata = await cache.readMetadata();
           const userinfo = metadata.contentDigest === contentDigest(latest)
             ? normalizeSubscriptionInfo(metadata.subscriptionUserinfo) : null;
-          sendText(response, 200, request.method === 'HEAD' ? '' : subscription, 'text/yaml; charset=utf-8',
+          sendText(response, 200, request.method === 'HEAD' ? '' : rendered, 'text/yaml; charset=utf-8',
             userinfo ? { 'subscription-userinfo': userinfo } : {});
         } catch (error) {
           await recordSubscriptionEvent(eventLog, 'subscription_failed', request, {

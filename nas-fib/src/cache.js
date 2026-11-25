@@ -50,12 +50,6 @@ export class SubscriptionCache {
     }
   }
 
-  async #writeMetadata(metadata) {
-    const temporary = `${this.metadataPath}.tmp`;
-    await writeFile(temporary, `${JSON.stringify(metadata, null, 2)}\n`, { mode: 0o600 });
-    await rename(temporary, this.metadataPath);
-  }
-
   async saveSuccessfulConfig(yamlText, details) {
     const validation = validateClashYaml(yamlText);
     await this.ensureDirs();
@@ -82,7 +76,7 @@ export class SubscriptionCache {
     await writeFile(join(this.historyDir, `${version}.info.json`), JSON.stringify({
       subscriptionUserinfo: metadata.subscriptionUserinfo, contentDigest: metadata.contentDigest
     }));
-    await this.#writeMetadata(metadata);
+    await writeFile(this.metadataPath, `${JSON.stringify(metadata, null, 2)}\n`);
     return metadata;
   }
 
@@ -139,7 +133,7 @@ export class SubscriptionCache {
       restoredFromVersion: details.fromVersion,
       health: details.health ?? null
     };
-    await this.#writeMetadata(metadata);
+    await writeFile(this.metadataPath, `${JSON.stringify(metadata, null, 2)}\n`);
     return metadata;
   }
 
@@ -153,7 +147,7 @@ export class SubscriptionCache {
         failedAt
       }
     };
-    await this.#writeMetadata(metadata);
+    await writeFile(this.metadataPath, `${JSON.stringify(metadata, null, 2)}\n`);
     return metadata;
   }
 }
